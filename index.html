@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realidad Virtual en la Docencia de FP | CIFP Cerdeño</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter, Orbitron (futurista) & Dancing Script (caligrafía) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        script: ['"Dancing Script"', 'cursive'],
+                        display: ['"Orbitron"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .card-expand-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-expand-content.open {
+            grid-template-rows: 1fr;
+        }
+        .card-expand-inner {
+            overflow: hidden;
+        }
+        /* Control de visibilidad de notas privadas del ponente */
+        body:not(.trainer-mode) .trainer-only {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white flex flex-col min-h-screen">
+
+    <!-- CABECERA INSTITUCIONAL LIMPIA -->
+    <header class="relative overflow-hidden bg-slate-900 text-white border-b border-slate-800">
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-blue-500 blur-3xl"></div>
+            <div class="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-emerald-500 blur-3xl"></div>
+        </div>
+
+        <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-9">
+            <!-- Etiquetas superiores + Botón Vista Ponente -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                        <i data-lucide="glasses" class="w-3.5 h-3.5"></i> Meta Quest 3
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        <i data-lucide="cpu" class="w-3.5 h-3.5"></i> CIFP Cerdeño · Aula ATECA
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                        Curso 2026-2027
+                    </span>
+                </div>
+
+                <!-- INTERRUPTOR MODO PONENTE -->
+                <button type="button" id="trainer-toggle-btn" onclick="toggleTrainerMode()" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer" title="Muestra u oculta las notas y tiempos de control del ponente">
+                    <span id="trainer-dot" class="w-2 h-2 rounded-full bg-slate-500 transition-colors"></span>
+                    <span id="trainer-label">Vista Asistente</span>
+                </button>
+            </div>
+
+            <!-- Título y Ponente -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+                        <span class="text-white">Realidad</span> <span class="text-amber-300">Virtual</span> <span class="text-white">en la</span> <span class="text-amber-300">Docencia</span> <span class="text-white">de</span> <span class="text-amber-300">Formación</span> <span class="text-white">Profesional</span>
+                    </h1>
+                    <p class="mt-2.5 font-script text-xl sm:text-2xl text-amber-300/95 tracking-wide drop-shadow-sm">
+                        «Las nuevas realidades transforman nuestra forma de aprender y experimentar.»
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-3 bg-slate-800/80 border border-slate-700/80 rounded-2xl px-4 py-3 shrink-0">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-emerald-400 flex items-center justify-center font-bold text-slate-950 text-xs">
+                        JM
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Ponente</p>
+                        <p class="text-sm font-semibold text-white">José Manuel García Agudín</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- BARRA DE PESTAÑAS CON COLOR IDENTIFICATIVO PERSISTENTE -->
+    <nav class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2.5" role="tablist">
+                
+                <!-- PESTAÑA 0: CONFORT (ESMERALDA) -->
+                <button onclick="switchTab('confort')" id="tab-confort" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <i data-lucide="heart-handshake" class="w-4 h-4"></i>
+                    <span>Confort</span>
+                </button>
+
+                <!-- PESTAÑA 1: DÍA 1 (AZUL CERÚLEO) -->
+                <button onclick="switchTab('dia1')" id="tab-dia1" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <span class="tab-badge px-1.5 py-0.5 rounded text-[11px] font-bold">23 Nov</span>
+                    <span>Día 1</span>
+                </button>
+
+                <!-- PESTAÑA 2: DÍA 2 (ÁMBAR TERRACOTA) -->
+                <button onclick="switchTab('dia2')" id="tab-dia2" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <span class="tab-badge px-1.5 py-0.5 rounded text-[11px] font-bold">25 Nov</span>
+                    <span>Día 2</span>
+                </button>
+
+                <!-- PESTAÑA 3: DÍA 3 (BLOQUEADA POR EL MOMENTO) -->
+                <button onclick="switchTab('dia3')" id="tab-dia3" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <span class="tab-badge px-1.5 py-0.5 rounded text-[11px] font-bold">2 Dic</span>
+                    <span>Día 3</span>
+                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-75"></i>
+                </button>
+
+                <!-- PESTAÑA 4: RECURSOS (TURQUESA / TEAL) -->
+                <button onclick="switchTab('recursos')" id="tab-recursos" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <i data-lucide="compass" class="w-4 h-4"></i>
+                    <span>Recursos</span>
+                </button>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- MODAL DE CONTRASEÑA PARA VISTA PONENTE -->
+    <div id="pin-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-amber-600"></i> Acceso Ponente
+                </span>
+                <button type="button" onclick="closePinModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div>
+                <label for="pin-input" class="block text-sm font-semibold text-slate-800 mb-1.5">Introduce el código de 4 dígitos</label>
+                <input type="password" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="••••"
+                    onkeydown="if(event.key==='Enter') verifyPin()"
+                    class="w-full text-center tracking-[0.6em] font-mono text-xl font-bold py-2.5 px-4 rounded-xl border border-slate-300 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                <p id="pin-error" class="hidden text-xs text-rose-600 font-medium mt-1.5">Código incorrecto. Inténtalo de nuevo.</p>
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="closePinModal()" class="w-1/2 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">Cancelar</button>
+                <button type="button" onclick="verifyPin()" class="w-1/2 py-2 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition cursor-pointer">Activar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-7">
+
+        <!-- ========================================================= -->
+        <!-- PANEL 0: CONFORT Y BIENESTAR VISUAL                       -->
+        <!-- ========================================================= -->
+        <section id="panel-confort" class="tab-panel space-y-5">
+            <div class="bg-emerald-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-emerald-50 mb-2">
+                        Punto de partida · Bienestar y seguridad
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold">Confort Visual y Uso Seguro</h2>
+                    <p class="text-emerald-100 text-sm mt-1">Cuatro reglas sencillas para disfrutar de la Realidad Virtual desde el primer minuto sin fatiga ni mareos.</p>
+                </div>
+                <button onclick="switchTab('dia1')" class="self-start sm:self-center px-4 py-2.5 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-xs sm:text-sm font-bold flex items-center gap-2 transition shrink-0 shadow-sm cursor-pointer">
+                    <span>Ir al Día 1</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200/80 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2.5 text-emerald-700">
+                        <i data-lucide="eye" class="w-5 h-5"></i>
+                        <h3 class="font-bold text-slate-900">1. Ajuste de nitidez (Rueda IPD)</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">Antes de empezar, gira suavemente la rueda inferior izquierda del visor hasta que el texto del menú se vea completamente nítido. Si usas gafas, ajusta el separador interior.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200/80 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2.5 text-emerald-700">
+                        <i data-lucide="timer" class="w-5 h-5"></i>
+                        <h3 class="font-bold text-slate-900">2. Pausas frecuentes y descansos activos</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">Intercalamos bloques cortos con visor con descansos activos sin visor para que la vista descanse en todo momento.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200/80 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2.5 text-emerald-700">
+                        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                        <h3 class="font-bold text-slate-900">3. Escucha a tu cuerpo</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">Si notas calor repentino, cansancio ocular o ligera desorientación, quítate el visor al instante y descansa sentado. Nadie está obligado a continuar.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200/80 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2.5 text-emerald-700">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <h3 class="font-bold text-slate-900">4. Cuidado de lentes y espacio</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed">Limpia las lentes únicamente en seco con gamuza de microfibra, respeta el área de seguridad marcada y coloca siempre las correas de los mandos en tus muñecas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 1: DÍA 1 (AZUL CERÚLEO)                             -->
+        <!-- ========================================================= -->
+        <section id="panel-dia1" class="tab-panel hidden space-y-5">
+            <div class="bg-sky-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-sky-50 mb-2">
+                        Jornada 1 · Lunes 23 de noviembre <span class="trainer-only">· 16:00 – 18:30</span>
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold">Descubrimos y preparamos Meta Quest 3</h2>
+                    <p class="text-sky-100 text-sm mt-1">Perder el miedo al visor, ajustar la imagen y vivir nuestra primera experiencia inmersiva.</p>
+                </div>
+                <button onclick="toggleAllInPanel('panel-dia1')" class="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-semibold text-white flex items-center gap-1.5 transition shrink-0 cursor-pointer">
+                    <i data-lucide="chevrons-up-down" class="w-4 h-4"></i>
+                    <span>Expandir todo</span>
+                </button>
+            </div>
+            <div id="timeline-dia1" class="space-y-3"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 2: DÍA 2 (ÁMBAR TERRACOTA)                          -->
+        <!-- ========================================================= -->
+        <section id="panel-dia2" class="tab-panel hidden space-y-5">
+            <div class="bg-amber-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-amber-50 mb-2">
+                        Jornada 2 · Miércoles 25 de noviembre <span class="trainer-only">· 16:00 – 19:00</span>
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-extrabold">Dominamos el entorno, proyectamos y ampliamos experiencias</h2>
+                    <p class="text-amber-100 text-sm mt-1">Capturas, transmisión a pantalla, Loft, Tienda, SideQuest y carpeta de Origen desconocido.</p>
+                </div>
+                <button onclick="toggleAllInPanel('panel-dia2')" class="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-semibold text-white flex items-center gap-1.5 transition shrink-0 cursor-pointer">
+                    <i data-lucide="chevrons-up-down" class="w-4 h-4"></i>
+                    <span>Expandir todo</span>
+                </button>
+            </div>
+            <div id="timeline-dia2" class="space-y-3"></div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 3: DÍA 3 (BLOQUEADO HASTA APERTURA)                 -->
+        <!-- ========================================================= -->
+        <section id="panel-dia3" class="tab-panel hidden space-y-5">
+            <!-- Aviso visible cuando está bloqueado para asistentes -->
+            <div id="dia3-locked-banner" class="bg-purple-50 border border-purple-200 rounded-2xl p-8 sm:p-10 text-center space-y-3 shadow-sm">
+                <div class="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mx-auto">
+                    <i data-lucide="lock" class="w-7 h-7"></i>
+                </div>
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+                    Jornada 3 · Miércoles 2 de diciembre
+                </span>
+                <h2 class="text-2xl font-extrabold text-slate-900">Se abrirá próximamente</h2>
+                <p class="text-sm text-slate-600 max-w-md mx-auto">
+                    Los contenidos y actividades de la tercera jornada estarán disponibles antes de la sesión.
+                </p>
+            </div>
+
+            <!-- Contenido real (solo visible si el ponente activa su vista) -->
+            <div id="dia3-unlocked-content" class="hidden space-y-5">
+                <div class="bg-purple-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-purple-50 mb-2">
+                            Jornada 3 · Miércoles 2 de diciembre · 16:00 – 18:30 (Vista Ponente)
+                        </span>
+                        <h2 class="text-xl sm:text-2xl font-extrabold">De la tecnología a tu clase de FP</h2>
+                        <p class="text-purple-100 text-sm mt-1">Organizar sesiones con alumnado en el Aula ATECA y diseñar tu propia actividad didáctica.</p>
+                    </div>
+                    <button onclick="toggleAllInPanel('panel-dia3')" class="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-semibold text-white flex items-center gap-1.5 transition shrink-0 cursor-pointer">
+                        <i data-lucide="chevrons-up-down" class="w-4 h-4"></i>
+                        <span>Expandir todo</span>
+                    </button>
+                </div>
+                <div id="timeline-dia3" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 4: RECURSOS (AGUA MARINA / TEAL SUAVE)              -->
+        <!-- ========================================================= -->
+        <section id="panel-recursos" class="tab-panel hidden space-y-5">
+            <div class="bg-teal-700 rounded-2xl p-6 text-white shadow-sm">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-teal-50 mb-2">
+                    Enlaces directos de trabajo
+                </span>
+                <h2 class="text-xl sm:text-2xl font-extrabold">Recursos y Plataformas del Curso</h2>
+                <p class="text-teal-100 text-sm mt-1">Accesos rápidos a las herramientas oficiales de Meta y bancos de recursos 3D.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- CARPETA 1: ENLACES META -->
+                <div class="bg-teal-50/40 p-5 sm:p-6 rounded-2xl border-l-4 border-l-teal-600 border border-teal-200/80 shadow-sm space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="folder-open" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">Enlaces Meta</h3>
+                            <p class="text-xs text-slate-500">Acceso, proyección en pantalla e instalación</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <a href="https://www.meta.com/es-es/about/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">Meta oficial (Información y ecosistema)</p>
+                                <p class="text-xs text-slate-400 truncate">meta.com/es-es/about</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+
+                        <a href="https://auth.meta.com/language" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">Web de Meta (Acceso y cuenta)</p>
+                                <p class="text-xs text-slate-400 truncate">auth.meta.com/language</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+
+                        <a href="https://www.oculus.com/casting" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">Transmitir visor a pantalla (Casting)</p>
+                                <p class="text-xs text-slate-400 truncate">oculus.com/casting</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+
+                        <a href="https://sidequestvr.com/setup-howto" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">SideQuest (Configuración e instalación)</p>
+                                <p class="text-xs text-slate-400 truncate">sidequestvr.com/setup-howto</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- CARPETA 2: RECURSOS DEL CURSO -->
+                <div class="bg-teal-50/40 p-5 sm:p-6 rounded-2xl border-l-4 border-l-teal-600 border border-teal-200/80 shadow-sm space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="folder-open" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-base">Recursos del curso</h3>
+                            <p class="text-xs text-slate-500">Experiencias educativas y modelos 3D</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <a href="https://recursosfpsanidad.es/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">Recursos FP Sanidad</p>
+                                <p class="text-xs text-slate-400 truncate">recursosfpsanidad.es</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+
+                        <a href="https://sketchfab.com" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3 rounded-xl bg-white border border-teal-200/70 hover:border-teal-500 hover:shadow-sm transition group">
+                            <div class="min-w-0 pr-2">
+                                <p class="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition">Sketchfab (Modelos 3D y WebXR)</p>
+                                <p class="text-xs text-slate-400 truncate">sketchfab.com</p>
+                            </div>
+                            <i data-lucide="external-link" class="w-4 h-4 text-teal-600 shrink-0"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA MINIMALISTA -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+            <span><strong>CIFP Cerdeño</strong> · Aula ATECA · Curso 2026-2027</span>
+            <span>Ponente: <strong>José Manuel García Agudín</strong></span>
+        </div>
+    </footer>
+
+    <!-- DATOS Y LÓGICA INTERACTIVA -->
+    <script>
+        const TRAINER_PIN = "0911";
+
+        const courseSchedule = {
+            dia1: [
+                {
+                    time: "16:00",
+                    duration: "15 min",
+                    type: "practica",
+                    badge: "Sin encender",
+                    title: "1. Anatomía del visor, ajuste físico y mandos al tacto",
+                    summary: "Botones externos, rueda de nitidez (IPD), separador de gafas, correas, limpieza y botones de los mandos.",
+                    participantAction: "Con el visor apagado en tus manos, localizar cada botón del visor y de los mandos (Botón Meta, Menú, Gatillo y Agarre lateral).",
+                    outcome: "Familiarizarte físicamente con el equipo y saber ajustarlo sin miedo.",
+                    trainerNote: "Arranca directamente tocando el visor apagado. Muestra dónde está la rueda IPD, cómo limpiar las lentes y cada botón del mando."
+                },
+                {
+                    time: "16:15",
+                    duration: "20 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "2. Primeros ajustes proyectados: Menú, Avatar, Biblioteca y Loft",
+                    summary: "Vemos en la pizarra: menú universal, avatar, biblioteca, colocación de apps, carpeta favoritos, volumen/brillo y visita exprés al Loft.",
+                    participantAction: "Observar en la pizarra digital cómo navegar por el menú universal, editar el avatar, organizar la biblioteca y la carpeta «Favoritos», regular volumen y brillo en controles rápidos y hacer una visita exprés al Loft.",
+                    outcome: "Comprender toda la interfaz de inicio, dónde están los ajustes rápidos de volumen/brillo y cómo moverte por el Loft antes de ponerte el visor.",
+                    trainerNote: "Proyecta tu visor en la pizarra y recorre en orden: menú universal, avatar, biblioteca, colocación de aplicaciones, carpeta favoritos, controles de acceso rápido (volumen y brillo) y visita exprés al Loft."
+                },
+                {
+                    time: "16:35",
+                    duration: "30 min",
+                    type: "practica",
+                    badge: "Ahora todos y todas (Guiada)",
+                    title: "3. Primeros ajustes en tu visor: Menú, Avatar, Biblioteca y Loft",
+                    summary: "Encendemos juntos para configurar menú universal, avatar, biblioteca, carpeta favoritos, volumen/brillo y visita exprés al Loft.",
+                    participantAction: "Encender tu Meta Quest 3, ajustar la nitidez (IPD), recorrer el menú universal, configurar tu avatar, colocar tus aplicaciones en la carpeta «Favoritos», probar los controles rápidos de volumen y brillo y realizar una visita exprés al Loft.",
+                    outcome: "Ver la imagen totalmente nítida, personalizar tu perfil y dominar los controles básicos de sonido, brillo y biblioteca.",
+                    trainerNote: "Guía paso a paso a todos y todas a la vez: menú universal, avatar, biblioteca, colocación de aplicaciones, carpeta favoritos, controles de acceso rápido (volumen y brillo) y visita exprés al Loft."
+                },
+                {
+                    time: "17:05",
+                    duration: "15 min",
+                    type: "descanso",
+                    badge: "Descanso visual",
+                    title: "4. Maletines, batería externa y evolución Meta Quest 2 → Quest 3",
+                    summary: "Descansamos la vista mientras vemos los maletines de transporte, cómo acoplar la batería externa y la evolución desde Meta Quest 2.",
+                    participantAction: "Quitarse el visor para descansar la vista, revisar la colocación en maletines, practicar el acople de la batería externa y comparar físicamente Meta Quest 2 con Meta Quest 3.",
+                    outcome: "Descansar la vista y conocer cómo transportar el equipo, ampliar su autonomía y entender el salto técnico respecto a Quest 2.",
+                    trainerNote: "Sin visor puesto: muestra la organización de los maletines, el acople de batería externa y pasa tu Meta Quest 2 para comparar lentes, peso y mandos."
+                },
+                {
+                    time: "17:20",
+                    duration: "10 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "5. Primera experiencia inmersiva: Primeros Pasos (First Steps)",
+                    summary: "Demostración proyectada en pizarra de cómo interactuar con objetos virtuales en Primeros Pasos.",
+                    participantAction: "Observar en la pizarra digital cómo funciona la experiencia Primeros Pasos (First Steps) y cómo combinar gatillo y botón de agarre lateral.",
+                    outcome: "Tener clara la mecánica de agarre y lanzamiento antes de entrar en la experiencia.",
+                    trainerNote: "Proyecta en la pizarra digital el arranque y las primeras interacciones dentro de Primeros Pasos (First Steps)."
+                },
+                {
+                    time: "17:30",
+                    duration: "25 min",
+                    type: "practica",
+                    badge: "Todos/as juntos (Guiada)",
+                    title: "6. Primera experiencia inmersiva: Primeros Pasos (First Steps)",
+                    summary: "Entramos todos y todas juntos en Primeros Pasos para practicar el manejo natural de los mandos.",
+                    participantAction: "Abrir Primeros Pasos (First Steps) y practicar el agarre de cubos, lanzamiento de aviones de papel y uso de objetos virtuales.",
+                    outcome: "Dominar tus manos virtuales con naturalidad y sin mareos.",
+                    trainerNote: "Supervisa de pie que todos y todas completen Primeros Pasos cómodamente y mantengan la distancia de seguridad."
+                },
+                {
+                    time: "17:55",
+                    duration: "15 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "7. Realidad Virtual vs. Realidad Mixta: demostración en vivo",
+                    summary: "Vemos proyectada una aplicación que muestra la diferencia real entre inmersión total y Realidad Mixta.",
+                    participantAction: "Sin visor puesto (descansando la vista), observar en la pizarra digital cómo funciona la Realidad Mixta y comentar sus posibilidades en FP.",
+                    outcome: "Comprender visualmente la diferencia entre RV y Realidad Mixta tras haber probado el visor.",
+                    trainerNote: "Ponte tú el visor y proyecta una app con cambio entre Passthrough (Realidad Mixta) y entorno 100% virtual para explicar la diferencia con ejemplos reales."
+                },
+                {
+                    time: "18:10",
+                    duration: "12 min",
+                    type: "practica",
+                    badge: "Exploración Flexible",
+                    title: "8. Probemos nuestras primeras experiencias (Carpeta Favoritos)",
+                    summary: "Elige libremente una experiencia de tu carpeta «Favoritos» o descansa la vista siguiendo la demostración en la pizarra.",
+                    participantAction: "Abrir tu carpeta «Favoritos» para probar una de las experiencias preparadas, o bien descansar la vista observando en la pizarra digital la demostración del ponente.",
+                    outcome: "Disfrutar de una primera exploración libre o consolidar lo aprendido observando en pantalla.",
+                    trainerNote: "Bloque colchón flexible: según el ritmo del grupo, permite que unos prueben una app de Favoritos mientras otros descansan mirando tu proyección en la pizarra."
+                },
+                {
+                    time: "18:22",
+                    duration: "8 min",
+                    type: "cierre",
+                    badge: "Protocolo Cierre",
+                    title: "9. Apagado completo, limpieza y guardado en maletín",
+                    summary: "Dejamos los 8 equipos apagados (no suspendidos), limpios y ordenados.",
+                    participantAction: "Apagar completamente el visor, limpiar la espuma facial y guardarlo junto a sus mandos en el maletín.",
+                    outcome: "Protocolo de cuidado interiorizado.",
+                    trainerNote: "Comprueba que ningún visor quede en modo reposo."
+                }
+            ],
+            dia2: [
+                {
+                    time: "16:00",
+                    duration: "20 min",
+                    type: "practica",
+                    badge: "Todos/as a la vez",
+                    title: "1. Repaso rápido del menú, carpeta «Favoritos» y software",
+                    summary: "Encendemos, repasamos el menú universal, añadimos más aplicaciones a «Favoritos» y revisamos actualización de software.",
+                    participantAction: "Encender tu visor, repasar el menú universal, incorporar nuevas aplicaciones a la carpeta «Favoritos» y comprobar si hay actualizaciones de software.",
+                    outcome: "Afianzar el manejo del menú, mantener ordenada tu carpeta de favoritos y verificar el estado del sistema.",
+                    trainerNote: "Todos/as a la vez dentro del visor: repaso ágil del menú, añadir apps a Favoritos y comprobar la pestaña de actualización de software."
+                },
+                {
+                    time: "16:20",
+                    duration: "20 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "2. Controles rápidos: fotos, grabación, galería, transmitir y Loft",
+                    summary: "Vemos en pizarra cómo sacar una foto, grabar vídeo, visitar la galería, transmitir imagen y cambiar de ambiente en el Loft.",
+                    participantAction: "Sin visor puesto (descansando la vista), observar en la pizarra digital los controles de acceso rápido: captura de foto/vídeo, galería, transmisión y cambio de ambiente en el Loft.",
+                    outcome: "Conocer todas las herramientas de captura, proyección y personalización del entorno antes de practicarlas.",
+                    trainerNote: "Proyecta tu visor en la pizarra y muestra paso a paso: controles de acceso rápido, sacar foto, grabar vídeo, abrir galería, transmitir pantalla y cambiar de ambiente en el Loft."
+                },
+                {
+                    time: "16:40",
+                    duration: "30 min",
+                    type: "practica",
+                    badge: "Todos/as a la vez",
+                    title: "3. Practicamos captura, galería, transmisión y ambiente del Loft",
+                    summary: "Ponemos en práctica lo visto en pizarra: foto, grabación, visita a galería, transmisión y cambio de ambiente.",
+                    participantAction: "Abrir los controles de acceso rápido, hacer una captura de pantalla, grabar un clip breve, revisarlo en la galería, probar la transmisión y cambiar el ambiente de tu Loft.",
+                    outcome: "Dominar las funciones multimedia, la transmisión en aula y la personalización de tu espacio virtual.",
+                    trainerNote: "Guía al grupo todos/as a la vez para que cada docente realice su foto, grabación, revisión en galería, prueba de transmisión y cambio de ambiente en el Loft."
+                },
+                {
+                    time: "17:10",
+                    duration: "20 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "4. Web oficial de Meta y SideQuest: catálogo y descargas",
+                    summary: "Exploramos en pizarra la web de Meta y SideQuest: cómo se descarga, lista de deseos y demostración de descarga.",
+                    participantAction: "Descansar la vista mientras observas en la pizarra digital cómo navegar por la web oficial de Meta y SideQuest, gestionar la lista de deseos y descargar una aplicación.",
+                    outcome: "Saber localizar experiencias educativas tanto en el catálogo oficial de Meta como en SideQuest y organizarlas en tu lista de deseos.",
+                    trainerNote: "En el ordenador proyectado en pizarra: visita la página oficial de Meta y SideQuest, explica cómo funciona la descarga, añade apps a la lista de deseos y realiza una descarga de ejemplo."
+                },
+                {
+                    time: "17:30",
+                    duration: "20 min",
+                    type: "demo",
+                    badge: "Pizarra Digital",
+                    title: "5. Tienda en el visor, Favoritos y carpeta «Origen desconocido»",
+                    summary: "Demostración proyectada: descarga desde la Tienda, guardado en «Favoritos» y visita a «Origen desconocido».",
+                    participantAction: "Observar en la pizarra digital cómo descargar una app desde la Tienda del visor, guardarla en «Favoritos» y acceder a la carpeta «Origen desconocido».",
+                    outcome: "Diferenciar dónde se alojan las aplicaciones oficiales y dónde encontrar las instaladas desde fuentes externas.",
+                    trainerNote: "Proyecta tu visor: entra en la Tienda, descarga una aplicación, guárdala en la carpeta Favoritos y entra en la sección Origen desconocido mostrando una aplicación."
+                },
+                {
+                    time: "17:50",
+                    duration: "55 min",
+                    type: "practica",
+                    badge: "Todos/as a la vez",
+                    title: "6. Origen desconocido, Tienda, Favoritos y primeras experiencias",
+                    summary: "Visitamos «Origen desconocido», descargamos una app en la Tienda, la guardamos en «Favoritos» y probamos varias experiencias.",
+                    participantAction: "Visitar la carpeta «Origen desconocido», entrar en la Tienda para descargar una aplicación, guardarla en tu carpeta «Favoritos» y explorar varias experiencias guardadas en «Favoritos».",
+                    outcome: "Autonomía completa para localizar aplicaciones en origen desconocido, descargar desde la Tienda y disfrutar de varias experiencias organizadas en favoritos.",
+                    trainerNote: "Acompaña al grupo todos/as a la vez: primero visita a Origen desconocido, después descarga en la Tienda y guardado en Favoritos, y finalmente exploración de varias experiencias de Favoritos."
+                },
+                {
+                    time: "18:45",
+                    duration: "15 min",
+                    type: "cierre",
+                    badge: "Protocolo Cierre",
+                    title: "7. Apagado completo, limpieza y guardado en maletín",
+                    summary: "Dejamos los 8 equipos apagados (no suspendidos), limpios y guardados en su maletín.",
+                    participantAction: "Apagar completamente el visor, limpiar la interfaz facial y las lentes con gamuza seca y guardarlo junto a sus mandos en el maletín.",
+                    outcome: "Equipo limpio, apagado y protegido listo para la siguiente sesión.",
+                    trainerNote: "Verifica que los 8 visores queden completamente apagados y guardados en sus maletines."
+                }
+            ],
+            dia3: [
+                {
+                    time: "16:00",
+                    duration: "20 min",
+                    type: "practica",
+                    badge: "WebXR sin instalar",
+                    title: "1. Modelos 3D y vídeos 360° directos desde el navegador",
+                    summary: "Cómo usar contenidos inmersivos gratuitos sin instalar aplicaciones.",
+                    participantAction: "Abrir los enlaces de la sección «Recursos» directamente en el navegador del visor.",
+                    outcome: "Tener un banco infinito de modelos 3D listos para usar en clase.",
+                    trainerNote: "Muestra Sketchfab en modo VR desde el navegador Meta Quest."
+                },
+                {
+                    time: "16:20",
+                    duration: "35 min",
+                    type: "practica",
+                    badge: "Mirada Docente",
+                    title: "2. Prueba a fondo de la experiencia para tu módulo",
+                    summary: "Analizamos tiempos, controles y dificultad pensando en nuestro alumnado.",
+                    participantAction: "Probar la app elegida anotando qué instrucciones necesitarán tus estudiantes.",
+                    outcome: "Validar la actividad antes de llevarla al aula.",
+                    trainerNote: "Ayuda a cada docente a acotar una tarea concreta de 10-15 minutos."
+                },
+                {
+                    time: "16:55",
+                    duration: "20 min",
+                    type: "descanso",
+                    badge: "Descanso Activo",
+                    title: "3. Cómo organizar una sesión con 25 alumnos y 8 visores",
+                    summary: "Rotación por estaciones, higiene entre turnos y supervisión proyectada.",
+                    participantAction: "Analizar el esquema de 3 estaciones rotativas en el Aula ATECA.",
+                    outcome: "Tener claro cómo gestionar un grupo completo sin tiempos muertos.",
+                    trainerNote: "Apóyate en la pestaña «Ejemplo de aula» para explicar las 3 estaciones de 15 minutos."
+                },
+                {
+                    time: "17:15",
+                    duration: "40 min",
+                    type: "reto",
+                    badge: "Taller Didáctico",
+                    title: "4. Diseñamos nuestra actividad didáctica (Sin visor)",
+                    summary: "Módulo → Resultado de Aprendizaje → Actividad VR → Organización → Evaluación.",
+                    participantAction: "Esbozar la ficha de tu actividad didáctica con asesoramiento personalizado.",
+                    outcome: "Borrador listo para completar en las 2 horas de trabajo personal.",
+                    trainerNote: "Asesoramiento individualizado mesa por mesa."
+                },
+                {
+                    time: "17:55",
+                    duration: "25 min",
+                    type: "inicio",
+                    badge: "Puesta en Común",
+                    title: "5. Micro-presentaciones de propuestas",
+                    summary: "Cada docente cuenta en 2-3 minutos qué actividad llevará al Aula ATECA.",
+                    participantAction: "Compartir tu propuesta y escuchar las ideas de otros departamentos.",
+                    outcome: "Banco de experiencias reales del CIFP Cerdeño.",
+                    trainerNote: "Anota qué apps conviene dejar preinstaladas en los 8 visores del centro."
+                },
+                {
+                    time: "18:20",
+                    duration: "10 min",
+                    type: "cierre",
+                    badge: "Cierre Final",
+                    title: "6. Orientaciones trabajo personal (2h) y cierre",
+                    summary: "Indicaciones finales para entregar la propuesta y revisión de maletines.",
+                    participantAction: "Verificar tu equipo y resolver últimas dudas.",
+                    outcome: "Autonomía plena para impartir docencia inmersiva en FP.",
+                    trainerNote: "Despedida y recordatorio de entrega de la ficha didáctica."
+                }
+            ]
+        };
+
+        // Paleta elegante, suave y monocromática por pestaña (manteniendo el tono al desplegar)
+        const tabThemes = {
+            confort: {
+                activeBtn: "bg-emerald-700 text-white shadow-sm",
+                inactiveBtn: "text-emerald-800 hover:bg-emerald-50",
+                badge: "bg-emerald-100 text-emerald-800",
+                borderAccent: "border-l-emerald-600",
+                textAccent: "text-emerald-700",
+                pillBg: "bg-emerald-100/80 text-emerald-800",
+                expandBg: "bg-emerald-50/50",
+                boxBg: "bg-white border-emerald-200/70",
+                outcomeBg: "bg-emerald-100/50 border-emerald-200/80 text-emerald-900"
+            },
+            dia1: {
+                activeBtn: "bg-sky-700 text-white shadow-sm",
+                inactiveBtn: "text-sky-800 hover:bg-sky-50",
+                badge: "bg-sky-100 text-sky-800",
+                borderAccent: "border-l-sky-600",
+                textAccent: "text-sky-700",
+                pillBg: "bg-sky-100/80 text-sky-800",
+                expandBg: "bg-sky-50/50",
+                boxBg: "bg-white border-sky-200/70",
+                outcomeBg: "bg-sky-100/50 border-sky-200/80 text-sky-950"
+            },
+            dia2: {
+                activeBtn: "bg-amber-700 text-white shadow-sm",
+                inactiveBtn: "text-amber-800 hover:bg-amber-50",
+                badge: "bg-amber-100 text-amber-800",
+                borderAccent: "border-l-amber-600",
+                textAccent: "text-amber-700",
+                pillBg: "bg-amber-100/80 text-amber-800",
+                expandBg: "bg-amber-50/50",
+                boxBg: "bg-white border-amber-200/70",
+                outcomeBg: "bg-amber-100/50 border-amber-200/80 text-amber-950"
+            },
+            dia3: {
+                activeBtn: "bg-purple-700 text-white shadow-sm",
+                inactiveBtn: "text-purple-800 hover:bg-purple-50",
+                badge: "bg-purple-100 text-purple-800",
+                borderAccent: "border-l-purple-600",
+                textAccent: "text-purple-700",
+                pillBg: "bg-purple-100/80 text-purple-800",
+                expandBg: "bg-purple-50/50",
+                boxBg: "bg-white border-purple-200/70",
+                outcomeBg: "bg-purple-100/50 border-purple-200/80 text-purple-950"
+            },
+            recursos: {
+                activeBtn: "bg-teal-700 text-white shadow-sm",
+                inactiveBtn: "text-teal-800 hover:bg-teal-50",
+                badge: "bg-teal-100 text-teal-800",
+                borderAccent: "border-l-teal-600",
+                textAccent: "text-teal-700"
+            }
+        };
+
+        // Renderizado de tarjetas manteniendo exactamente la gama de color del día en todo el despliegue
+        function renderDayTimeline(dayKey, containerId) {
+            const container = document.getElementById(containerId);
+            const blocks = courseSchedule[dayKey];
+            const theme = tabThemes[dayKey];
+            if (!container || !blocks) return;
+
+            container.innerHTML = blocks.map((item, idx) => {
+                const cardId = `${dayKey}-card-${idx}`;
+                
+                return `
+                <article class="bg-white rounded-2xl border-l-4 ${theme.borderAccent} border border-slate-200/80 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                    <button type="button" onclick="toggleCard('${cardId}')" aria-expanded="false" class="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-4 focus:outline-none group cursor-pointer">
+                        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div class="trainer-only shrink-0 text-center w-14 sm:w-16">
+                                <span class="block font-mono text-xs sm:text-sm font-bold text-slate-900">${item.time}</span>
+                                <span class="block text-[10px] text-slate-400 font-medium">${item.duration}</span>
+                            </div>
+
+                            <div class="trainer-only h-8 w-px bg-slate-200 shrink-0"></div>
+
+                            <div class="min-w-0">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${theme.pillBg} mb-1">
+                                    ${item.badge}
+                                </span>
+                                <h3 class="text-sm sm:text-base font-bold text-slate-900 group-hover:${theme.textAccent} transition-colors truncate">
+                                    ${item.title}
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-0.5 line-clamp-1">${item.summary}</p>
+                            </div>
+                        </div>
+
+                        <div class="w-8 h-8 rounded-full ${theme.pillBg} flex items-center justify-center shrink-0 transition-transform duration-300 chevron-icon">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </div>
+                    </button>
+
+                    <div id="${cardId}" class="card-expand-content ${theme.expandBg} border-t border-slate-200/60">
+                        <div class="card-expand-inner">
+                            <div class="p-4 sm:p-5 space-y-3 text-xs sm:text-sm">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="${theme.boxBg} p-3.5 rounded-xl border">
+                                        <span class="text-[11px] font-bold uppercase tracking-wider ${theme.textAccent} flex items-center gap-1.5 mb-1">
+                                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> ¿Qué vas a hacer?
+                                        </span>
+                                        <p class="text-slate-700 leading-relaxed">${item.participantAction}</p>
+                                    </div>
+                                    <div class="${theme.outcomeBg} p-3.5 rounded-xl border">
+                                        <span class="text-[11px] font-bold uppercase tracking-wider ${theme.textAccent} flex items-center gap-1.5 mb-1">
+                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Objetivo logrado
+                                        </span>
+                                        <p class="font-medium leading-relaxed">${item.outcome}</p>
+                                    </div>
+                                </div>
+
+                                <div class="trainer-only bg-slate-900 text-slate-200 p-3.5 rounded-xl border border-slate-700">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-1">
+                                        <i data-lucide="mic" class="w-3.5 h-3.5"></i> Guía Ponente (${item.duration})
+                                    </span>
+                                    <p class="text-xs leading-relaxed">${item.trainerNote}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                `;
+            }).join('');
+        }
+
+        function toggleCard(cardId) {
+            const content = document.getElementById(cardId);
+            const btn = content.previousElementSibling;
+            const icon = btn.querySelector('.chevron-icon');
+            const isOpen = content.classList.contains('open');
+
+            content.classList.toggle('open', !isOpen);
+            btn.setAttribute('aria-expanded', String(!isOpen));
+            icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        function toggleAllInPanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const cards = panel.querySelectorAll('.card-expand-content');
+            const anyClosed = Array.from(cards).some(c => !c.classList.contains('open'));
+
+            cards.forEach(card => {
+                const isOpen = card.classList.contains('open');
+                if ((anyClosed && !isOpen) || (!anyClosed && isOpen)) {
+                    toggleCard(card.id);
+                }
+            });
+        }
+
+        // Cambiar pestaña manteniendo su color propio
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            const target = document.getElementById(`panel-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            Object.keys(tabThemes).forEach(key => {
+                const btn = document.getElementById(`tab-${key}`);
+                if (!btn) return;
+                const badge = btn.querySelector('.tab-badge');
+                const theme = tabThemes[key];
+
+                if (key === tabId) {
+                    btn.className = `tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${theme.activeBtn}`;
+                    if (badge) badge.className = 'tab-badge px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/20 text-white';
+                } else {
+                    btn.className = `tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${theme.inactiveBtn}`;
+                    if (badge) badge.className = `tab-badge px-1.5 py-0.5 rounded text-[11px] font-bold ${theme.badge}`;
+                }
+            });
+        }
+
+        function toggleTrainerMode() {
+            const isAlreadyTrainer = document.body.classList.contains('trainer-mode');
+            if (isAlreadyTrainer) {
+                setTrainerState(false);
+            } else {
+                openPinModal();
+            }
+        }
+
+        function openPinModal() {
+            const modal = document.getElementById('pin-modal');
+            const input = document.getElementById('pin-input');
+            const error = document.getElementById('pin-error');
+            error.classList.add('hidden');
+            input.value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+        }
+
+        function verifyPin() {
+            const input = document.getElementById('pin-input');
+            const error = document.getElementById('pin-error');
+            if (input.value === TRAINER_PIN) {
+                closePinModal();
+                setTrainerState(true);
+            } else {
+                error.classList.remove('hidden');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function setTrainerState(enable) {
+            document.body.classList.toggle('trainer-mode', enable);
+            const dot = document.getElementById('trainer-dot');
+            const label = document.getElementById('trainer-label');
+            const btn = document.getElementById('trainer-toggle-btn');
+            const dia3Locked = document.getElementById('dia3-locked-banner');
+            const dia3Unlocked = document.getElementById('dia3-unlocked-content');
+
+            if (enable) {
+                dot.classList.replace('bg-slate-500', 'bg-amber-400');
+                label.textContent = 'Vista Ponente';
+                btn.classList.add('border-amber-500/50', 'text-amber-200');
+                if (dia3Locked && dia3Unlocked) {
+                    dia3Locked.classList.add('hidden');
+                    dia3Unlocked.classList.remove('hidden');
+                }
+            } else {
+                dot.classList.replace('bg-amber-400', 'bg-slate-500');
+                label.textContent = 'Vista Asistente';
+                btn.classList.remove('border-amber-500/50', 'text-amber-200');
+                if (dia3Locked && dia3Unlocked) {
+                    dia3Locked.classList.remove('hidden');
+                    dia3Unlocked.classList.add('hidden');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDayTimeline('dia1', 'timeline-dia1');
+            renderDayTimeline('dia2', 'timeline-dia2');
+            renderDayTimeline('dia3', 'timeline-dia3');
+            switchTab('confort'); // Inicia en Confort con su color esmeralda activo
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
