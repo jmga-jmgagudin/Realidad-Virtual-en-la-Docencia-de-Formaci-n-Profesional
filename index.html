@@ -111,6 +111,12 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6">
             <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2.5" role="tablist">
                 
+                <!-- PESTAÑA INICIAL: BIENVENIDA (NEGRO / PIZARRA OSCURA) -->
+                <button onclick="switchTab('bienvenida')" id="tab-bienvenida" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span>Bienvenida</span>
+                </button>
+
                 <!-- PESTAÑA 0: CONFORT (ESMERALDA) -->
                 <button onclick="switchTab('confort')" id="tab-confort" role="tab" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer">
                     <i data-lucide="heart-handshake" class="w-4 h-4"></i>
@@ -175,9 +181,43 @@
     <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-7">
 
         <!-- ========================================================= -->
+        <!-- PANEL INICIAL: BIENVENIDA (FONDO NEGRO Y LETRA A MANO)    -->
+        <!-- ========================================================= -->
+        <section id="panel-bienvenida" class="tab-panel space-y-5">
+            <div class="relative overflow-hidden bg-slate-950 rounded-3xl p-8 sm:p-12 md:p-14 text-white shadow-xl border border-slate-800 text-center">
+                <div class="absolute inset-0 opacity-20 pointer-events-none">
+                    <div class="absolute -top-24 left-1/4 w-72 h-72 rounded-full bg-amber-400/30 blur-3xl"></div>
+                    <div class="absolute -bottom-24 right-1/4 w-72 h-72 rounded-full bg-blue-500/30 blur-3xl"></div>
+                </div>
+
+                <div class="relative max-w-2xl mx-auto space-y-6">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-medium bg-white/10 text-slate-300 border border-white/15">
+                        <i data-lucide="glasses" class="w-3.5 h-3.5 text-amber-300"></i> Aula ATECA · CIFP Cerdeño
+                    </span>
+
+                    <div class="space-y-4 font-script text-2xl sm:text-3xl md:text-4xl text-white leading-relaxed tracking-wide">
+                        <p>
+                            «Bienvenidos y bienvenidas a un espacio donde la curiosidad abre nuevas ventanas al aprendizaje.»
+                        </p>
+                        <p class="text-slate-200 text-xl sm:text-2xl md:text-3xl">
+                            No hace falta saberlo todo para empezar: basta con ponerse el visor, experimentar sin miedo y descubrir juntos cómo acercar estas realidades a nuestro alumnado de Formación Profesional.
+                        </p>
+                    </div>
+
+                    <div class="pt-4">
+                        <button onclick="switchTab('confort')" class="inline-flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-white text-slate-950 hover:bg-amber-300 font-sans text-xs sm:text-sm font-bold transition shadow-md cursor-pointer">
+                            <span>Comenzar por Confort y Seguridad</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
         <!-- PANEL 0: CONFORT Y BIENESTAR VISUAL                       -->
         <!-- ========================================================= -->
-        <section id="panel-confort" class="tab-panel space-y-5">
+        <section id="panel-confort" class="tab-panel hidden space-y-5">
             <div class="bg-emerald-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-emerald-50 mb-2">
@@ -236,7 +276,7 @@
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 text-sky-50 mb-2">
                         Jornada 1 · Lunes 23 de noviembre <span class="trainer-only">· 16:00 – 18:30</span>
                     </span>
-                    <h2 class="text-xl sm:text-2xl font-extrabold">Descubrimos y preparamos Meta Quest 3</h2>
+                    <h2 class="text-xl sm:text-2xl font-extrabold">Descubrimos y preparamos nuestras Meta Quest 3</h2>
                     <p class="text-sky-100 text-sm mt-1">Perder el miedo al visor, ajustar la imagen y vivir nuestra primera experiencia inmersiva.</p>
                 </div>
                 <button onclick="toggleAllInPanel('panel-dia1')" class="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-semibold text-white flex items-center gap-1.5 transition shrink-0 cursor-pointer">
@@ -664,6 +704,13 @@
 
         // Paleta elegante, suave y monocromática por pestaña (manteniendo el tono al desplegar)
         const tabThemes = {
+            bienvenida: {
+                activeBtn: "bg-slate-950 text-white shadow-sm",
+                inactiveBtn: "text-slate-800 hover:bg-slate-100",
+                badge: "bg-slate-200 text-slate-900",
+                borderAccent: "border-l-slate-900",
+                textAccent: "text-slate-900"
+            },
             confort: {
                 activeBtn: "bg-emerald-700 text-white shadow-sm",
                 inactiveBtn: "text-emerald-800 hover:bg-emerald-50",
@@ -899,7 +946,7 @@
             renderDayTimeline('dia1', 'timeline-dia1');
             renderDayTimeline('dia2', 'timeline-dia2');
             renderDayTimeline('dia3', 'timeline-dia3');
-            switchTab('confort'); // Inicia en Confort con su color esmeralda activo
+            switchTab('bienvenida'); // Inicia en Bienvenida con fondo negro y letra escrita a mano
             lucide.createIcons();
         });
     </script>
